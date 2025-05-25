@@ -33,6 +33,7 @@
 #endif
     NSString *videoPath;
     BOOL running;
+    NSThread *decodeThread;
 }
 
 - (instancetype) initWithFrame: (NSRect)frameRect; // videoPath:(NSString *)path;
