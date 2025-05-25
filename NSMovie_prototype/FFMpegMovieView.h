@@ -10,12 +10,12 @@
 #import <Cocoa/Cocoa.h>
 
 // FFmpeg headers
-extern "C" {
+// extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 #include <libavutil/imgutils.h>
-}
+// }
 
 @interface FFmpegVideoView : NSView {
     NSImage *currentFrame;

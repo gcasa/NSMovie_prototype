@@ -13,7 +13,7 @@
     self = [super initWithFrame:frameRect];
     videoPath = [path copy];
 
-    av_register_all();
+    // av_register_all();
 
     formatContext = avformat_alloc_context();
     if (avformat_open_input(&formatContext, [videoPath UTF8String], NULL, NULL) != 0) return nil;
@@ -46,37 +46,32 @@
                             codecContext->width, codecContext->height, AV_PIX_FMT_RGB24,
                             SWS_BILINEAR, NULL, NULL, NULL);
 
+    decodeQueue = dispatch_queue_create("ffmpeg.decode.queue", DISPATCH_QUEUE_CONCURRENT);
     running = YES;
-    decodeThread = [[NSThread alloc] initWithTarget:self selector:@selector(startDecoding) object:nil];
-    [decodeThread start];
+    [self startDecoding];
 
     return self;
 }
 
-- (void)dealloc {
-    [self stopPlayback];
-    [super dealloc];
-}
-
 - (void)startDecoding {
-    while (running) {
-        [self decodeAndDisplayNextFrame];
-        [NSThread sleepForTimeInterval:1.0 / 30.0];
-    }
+    dispatch_async(decodeQueue, ^{
+        while (self->running) {
+            [self decodeAndDisplayNextFrame];
+            [NSThread sleepForTimeInterval:1.0/30.0];
+        }
+    });
 }
 
 - (void)stopPlayback {
     running = NO;
-    if (decodeThread) {
-        [decodeThread cancel];
-        decodeThread = nil;
-    }
-    if (frame) av_frame_free(&frame);
-    if (frameRGB) av_frame_free(&frameRGB);
-    if (buffer) av_free(buffer);
-    if (codecContext) avcodec_free_context(&codecContext);
-    if (formatContext) avformat_close_input(&formatContext);
-    if (swsCtx) sws_freeContext(swsCtx);
+    dispatch_barrier_sync(decodeQueue, ^{
+        if (frame) av_frame_free(&frame);
+        if (frameRGB) av_frame_free(&frameRGB);
+        if (buffer) av_free(buffer);
+        if (codecContext) avcodec_free_context(&codecContext);
+        if (formatContext) avformat_close_input(&formatContext);
+        if (swsCtx) sws_freeContext(swsCtx);
+    });
 }
 
 - (void)decodeAndDisplayNextFrame {
@@ -108,17 +103,15 @@
                 NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(codecContext->width, codecContext->height)];
                 [image addRepresentation:rep];
 
-                [self performSelectorOnMainThread:@selector(updateImage:) withObject:image waitUntilDone:NO];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    self->currentFrame = image;
+                    [self setNeedsDisplay:YES];
+                });
                 break;
             }
         }
         av_packet_unref(&packet);
     }
-}
-
-- (void)updateImage:(NSImage *)image {
-    currentFrame = image;
-    [self setNeedsDisplay:YES];
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
