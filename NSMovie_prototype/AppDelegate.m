@@ -5,10 +5,13 @@
 //  Created by Gregory Casamento on 5/24/25.
 //
 
+#import <Cocoa/Cocoa.h>
+
 #import "AppDelegate.h"
+#import "FFMpegMovieView.h"
 
 @interface AppDelegate ()
-
+@property (strong) IBOutlet FFmpegVideoView *view;
 @property (strong) IBOutlet NSWindow *window;
 @end
 
@@ -28,5 +31,19 @@
     return YES;
 }
 
+- (IBAction) openDocument: (id) sender
+{
+    NSOpenPanel *panel = [NSOpenPanel openPanel];
+    NSModalResponse r = [panel runModal];
+    
+    if (r == NSModalResponseOK)
+    {
+        NSString *filename = [panel filename];
+        [self.view setVideoPath: filename];
+#ifdef GNUSTEP
+        [self.view startDecoding];
+#endif
+    }
+}
 
 @end

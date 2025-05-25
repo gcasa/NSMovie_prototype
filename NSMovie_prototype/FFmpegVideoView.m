@@ -7,17 +7,30 @@
 
 #import "FFMpegMovieView.h"
 
+// ffmpeg_nsview_player.m
+
 @implementation FFmpegVideoView
 
-- (instancetype)initWithFrame:(NSRect)frameRect videoPath:(NSString *)path {
+- (instancetype)initWithFrame:(NSRect)frameRect {
     self = [super initWithFrame:frameRect];
+    return self;
+}
+
+- (void)dealloc {
+    [self stopPlayback];
+    // [super dealloc];
+}
+
+- (void)setVideoPath:(NSString *)path {
     videoPath = [path copy];
+    [self prepareDecoder];
+}
 
-    av_register_all();
-
+- (void)prepareDecoder {
+#ifdef GNUSTEP
     formatContext = avformat_alloc_context();
-    if (avformat_open_input(&formatContext, [videoPath UTF8String], NULL, NULL) != 0) return nil;
-    if (avformat_find_stream_info(formatContext, NULL) < 0) return nil;
+    if (avformat_open_input(&formatContext, [videoPath UTF8String], NULL, NULL) != 0) return;
+    if (avformat_find_stream_info(formatContext, NULL) < 0) return;
 
     videoStreamIndex = -1;
     for (int i = 0; i < formatContext->nb_streams; i++) {
@@ -26,13 +39,13 @@
             break;
         }
     }
-    if (videoStreamIndex == -1) return nil;
+    if (videoStreamIndex == -1) return;
 
     AVCodecParameters *codecPar = formatContext->streams[videoStreamIndex]->codecpar;
     AVCodec *codec = avcodec_find_decoder(codecPar->codec_id);
     codecContext = avcodec_alloc_context3(codec);
     avcodec_parameters_to_context(codecContext, codecPar);
-    if (avcodec_open2(codecContext, codec, NULL) < 0) return nil;
+    if (avcodec_open2(codecContext, codec, NULL) < 0) return;
 
     frame = av_frame_alloc();
     frameRGB = av_frame_alloc();
@@ -45,17 +58,15 @@
     swsCtx = sws_getContext(codecContext->width, codecContext->height, codecContext->pix_fmt,
                             codecContext->width, codecContext->height, AV_PIX_FMT_RGB24,
                             SWS_BILINEAR, NULL, NULL, NULL);
+#endif
+}
 
+- (void)startPlayback {
+#ifdef GNUSTEP
     running = YES;
     decodeThread = [[NSThread alloc] initWithTarget:self selector:@selector(startDecoding) object:nil];
     [decodeThread start];
-
-    return self;
-}
-
-- (void)dealloc {
-    [self stopPlayback];
-    [super dealloc];
+#endif
 }
 
 - (void)startDecoding {
@@ -66,6 +77,7 @@
 }
 
 - (void)stopPlayback {
+#ifdef GNUSTEP
     running = NO;
     if (decodeThread) {
         [decodeThread cancel];
@@ -77,9 +89,11 @@
     if (codecContext) avcodec_free_context(&codecContext);
     if (formatContext) avformat_close_input(&formatContext);
     if (swsCtx) sws_freeContext(swsCtx);
+#endif
 }
 
 - (void)decodeAndDisplayNextFrame {
+#ifdef GNUSTEP
     AVPacket packet;
     av_init_packet(&packet);
     packet.data = NULL;
@@ -114,6 +128,7 @@
         }
         av_packet_unref(&packet);
     }
+#endif
 }
 
 - (void)updateImage:(NSImage *)image {

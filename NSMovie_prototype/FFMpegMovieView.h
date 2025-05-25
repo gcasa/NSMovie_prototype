@@ -9,17 +9,20 @@
 
 #import <Cocoa/Cocoa.h>
 
+#ifdef GNUSTEP
 // FFmpeg headers
-extern "C" {
+// extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 #include <libavutil/imgutils.h>
-}
+// }
+#endif
 
 @interface FFmpegVideoView : NSView {
     NSImage *currentFrame;
     dispatch_queue_t decodeQueue;
+#ifdef GNUSTEP
     AVFormatContext *formatContext;
     AVCodecContext *codecContext;
     AVFrame *frame;
@@ -27,12 +30,14 @@ extern "C" {
     struct SwsContext *swsCtx;
     int videoStreamIndex;
     uint8_t *buffer;
+#endif
     NSString *videoPath;
     BOOL running;
 }
 
-- (instancetype)initWithFrame:(NSRect)frameRect videoPath:(NSString *)path;
-- (void)stopPlayback;
-- (void)startDecoding;
+- (instancetype) initWithFrame: (NSRect)frameRect; // videoPath:(NSString *)path;
+- (void) stopPlayback;
+- (void) startDecoding;
+- (void) setVideoPath: (NSString *)path;
 
 @end
