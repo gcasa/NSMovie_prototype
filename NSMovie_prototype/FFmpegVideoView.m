@@ -69,13 +69,6 @@
 #endif
 }
 
-- (void)startDecoding {
-    while (running) {
-        [self decodeAndDisplayNextFrame];
-        [NSThread sleepForTimeInterval:1.0 / 30.0];
-    }
-}
-
 - (void)stopPlayback {
 #ifdef GNUSTEP
     running = NO;

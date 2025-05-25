@@ -41,7 +41,7 @@
         NSString *filename = [panel filename];
         [self.view setVideoPath: filename];
 #ifdef GNUSTEP
-        [self.view startDecoding];
+        [self.view startPlayback];
 #endif
     }
 }

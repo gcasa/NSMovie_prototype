@@ -37,7 +37,7 @@
 
 - (instancetype) initWithFrame: (NSRect)frameRect; // videoPath:(NSString *)path;
 - (void) stopPlayback;
-- (void) startDecoding;
+- (void) startPlayback;
 - (void) setVideoPath: (NSString *)path;
 
 @end
