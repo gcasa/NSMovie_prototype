@@ -64,7 +64,7 @@
 - (void)startPlayback {
 #ifdef GNUSTEP
     running = YES;
-    decodeThread = [[NSThread alloc] initWithTarget:self selector:@selector(startPlayback) object:nil];
+    decodeThread = [[NSThread alloc] initWithTarget:self selector:@selector(decodeAndDisplayNextFrame) object:nil];
     [decodeThread start];
 #endif
 }
