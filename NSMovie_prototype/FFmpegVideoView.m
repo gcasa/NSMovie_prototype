@@ -63,14 +63,14 @@
 
 - (void)startPlayback {
 #ifdef GNUSTEP
-    running = YES;
-    // decodeThread = [[NSThread alloc] initWithTarget:self selector:@selector(decodeAndDisplayNextFrame) object:nil];
-    decodeThread = [NSThread scheduledTimerWithTimeInterval: (1.0/30.0)
-						     target: self
-						   selector: @selector(decodeAndDisplayNextFrame)
-						   userInfo: nil
-						    repeats: YES];
-    [decodeThread start];
+  running = YES;
+  // decodeThread = [[NSThread alloc] initWithTarget:self selector:@selector(decodeAndDisplayNextFrame) object:nil];
+  decodeThread = [NSTimer scheduledTimerWithTimeInterval: (1.0/30.0)
+						  target: self
+						selector: @selector(decodeAndDisplayNextFrame)
+						userInfo: nil
+						 repeats: YES];
+  [decodeThread start];
 #endif
 }
 
